@@ -33,6 +33,16 @@
         android:includeFontPadding="false"
         android:singleLine="true" />
 
+    <!-- Weather strip (theme keys weather_latitude and weather_longitude); gone unless configured. It sits behind
+         the grid, so tiles that scroll up cover it. -->
+    <com.gathin.tvhome.WeatherView
+        android:id="@+id/weather"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="124dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

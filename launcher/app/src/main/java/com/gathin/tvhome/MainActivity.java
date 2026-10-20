@@ -128,6 +128,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private File defaultWallpaper;
     private File wallDir;
     private List<WallpaperSchedule.Rule> wallSchedule = Collections.emptyList();
+    /** Weather strip (theme keys weather_latitude and weather_longitude): null config means off and no network. */
+    private WeatherView weatherView;
+    private WeatherConfig weatherCfg;
+    private WeatherFetcher.Result weatherResult;
+    private boolean weatherFetching;
+    private long weatherLastTry;
+    private String weatherShownKey = "";
+    private static final long WEATHER_REFRESH_MS = 60L * 60 * 1000;
+    private static final long WEATHER_RETRY_MS = 5L * 60 * 1000;
+    /** The temperature now is hidden when the data is older than this (the days stay). */
+    private static final long WEATHER_NOW_MS = 3L * 60 * 60 * 1000;
     private String vpnApp;
     private SpringAnimation springX, springY;
     private float glassTargetX, glassTargetY;
@@ -241,6 +252,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             updateWifiLabel();
             sky.update();
             updateWallpaper();
+            showWeather();
+            refreshWeather();
             handler.postDelayed(this, MINUTE_MS);
         }
     };
@@ -273,6 +286,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         wallDir = cfg.themeDir;
         wallSchedule = cfg.wallpaperSchedule;
         updateWallpaper();
+        weatherView = findViewById(R.id.weather);
+        weatherCfg = cfg.weather;
+        if (weatherCfg != null) {
+            weatherResult = WeatherFetcher.readCache(this, weatherCfg);
+            showWeather();
+        }
         sky = findViewById(R.id.sky);
         sky.setIntensity(cfg.skyIntensity);
         glass = findViewById(R.id.glass);
@@ -562,6 +581,34 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     }
 
+    /** Puts the saved or fetched forecast on screen; skips the redraw when nothing changed since the last call. */
+    private void showWeather() {
+        if (weatherCfg == null || weatherView == null) return;
+        LocalDate today = LocalDate.now();
+        boolean fresh = weatherResult != null
+                && System.currentTimeMillis() - weatherResult.fetchedAt < WEATHER_NOW_MS;
+        String key = weatherResult == null ? "none" : weatherResult.fetchedAt + "@" + today + "@" + fresh;
+        if (key.equals(weatherShownKey)) return;
+        weatherShownKey = key;
+        WeatherForecast forecast = weatherResult == null ? null : weatherResult.forecast.from(today);
+        weatherView.setForecast(forecast, weatherCfg.city, fresh);
+    }
+
+    /** One request an hour at most, five minutes between tries after a failure; no config means no request at all. */
+    private void refreshWeather() {
+        if (weatherCfg == null || weatherFetching) return;
+        long now = System.currentTimeMillis();
+        if (weatherResult != null && now - weatherResult.fetchedAt < WEATHER_REFRESH_MS) return;
+        if (now - weatherLastTry < WEATHER_RETRY_MS) return;
+        weatherFetching = true;
+        weatherLastTry = now;
+        WeatherFetcher.fetch(this, weatherCfg, result -> {
+            weatherFetching = false;
+            if (result != null) weatherResult = result;
+            showWeather();
+        });
+    }
+
     private void removeWallpaperView() {
         if (wallView != null) {
             root.removeView(wallView);
@@ -639,6 +686,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (showStats) startStats();
         sky.update();
         updateWallpaper();
+        showWeather();
+        refreshWeather();
         handler.postDelayed(minuteTick, MINUTE_MS);
         if (festive && diya != null) {
             diya.start();

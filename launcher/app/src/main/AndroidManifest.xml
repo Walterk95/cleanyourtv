@@ -9,6 +9,9 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Only for the optional weather strip (theme keys weather_latitude and weather_longitude): one HTTPS request
+         an hour to api.open-meteo.com. Without those keys the launcher never opens a connection. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Needed since Android 10 to read the Wi-Fi network name for the network pill. Never requested at
          runtime: build-and-install grants it with pm grant, so lint's Android 12 "ask for COARSE with
          FINE" rule does not apply here. -->

@@ -86,6 +86,8 @@ final class Config {
     final File themeDir;
     /** Wallpaper rules (theme key wallpaper_schedule); empty when the theme has none. */
     final List<WallpaperSchedule.Rule> wallpaperSchedule;
+    /** The weather strip (theme keys weather_latitude and weather_longitude, ...); null when off, and then nothing goes on the network. */
+    final WeatherConfig weather;
 
     private Config(List<String> dockApps, boolean fillDock, List<String> hiddenApps, String liveTvPackage,
                    String liveTvAction, String sourcePanelService, String sourcePanelAction, String inputAction,
@@ -93,7 +95,9 @@ final class Config {
                    boolean shamsiDate, String greetingName, boolean moduleCards, boolean reducedMotion, boolean dockTitle, boolean dockRow, boolean reorderButton, String vpnApp,
                    boolean showHomeSettingsShortcut, boolean showStats, boolean appLibrary, int backgroundColor, int skyIntensity,
                    int[] settingsKeycodes, boolean settingsKeyPanel, File wallpaper, boolean overlayApplied,
-                   Festival festival, int dockScale, File themeDir, List<WallpaperSchedule.Rule> wallpaperSchedule) {
+                   Festival festival, int dockScale, File themeDir, List<WallpaperSchedule.Rule> wallpaperSchedule,
+                   WeatherConfig weather) {
+        this.weather = weather;
         this.dockScale = dockScale;
         this.themeDir = themeDir;
         this.wallpaperSchedule = Collections.unmodifiableList(wallpaperSchedule);
@@ -166,6 +170,7 @@ final class Config {
         boolean applied = false;
         int dockScale = 100;
         List<WallpaperSchedule.Rule> schedule = new ArrayList<>();
+        WeatherConfig weather = null;
 
         File dir = dir(ctx);
         File file = dir != null ? new File(dir, FILE_NAME) : null;
@@ -201,6 +206,9 @@ final class Config {
             settingsKeyPanel = bool(json, "settings_key_panel", settingsKeyPanel);
             dockScale = integer(json, "dock_scale", dockScale, 40, 100);
             schedule = scheduleList(json, "wallpaper_schedule");
+            weather = WeatherConfig.of(number(json, "weather_latitude"), number(json, "weather_longitude"),
+                    string(json, "weather_city", ""), json.opt("weather_days") instanceof Number
+                            ? Integer.valueOf(((Number) json.opt("weather_days")).intValue()) : null);
         }
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
         // current theme without clearing choices from an older launcher version.
@@ -222,7 +230,7 @@ final class Config {
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, greetingName, moduleCards, reducedMotion, dockTitle, dockRow, reorderButton, vpn, homeSettings, showStats, library, background,
                 Math.max(0, Math.min(100, skyIntensity)), settingsKeycodes, settingsKeyPanel, wallpaper, applied,
-                festival, dockScale, dir, schedule);
+                festival, dockScale, dir, schedule, weather);
     }
 
     /**
@@ -301,6 +309,12 @@ final class Config {
     private static String string(JSONObject o, String key, String fallback) {
         Object v = o.opt(key);
         return v instanceof String ? ((String) v).trim() : fallback;
+    }
+
+    /** A JSON number, or null when the key is missing or is not a number. */
+    private static Double number(JSONObject o, String key) {
+        Object v = o.opt(key);
+        return v instanceof Number ? Double.valueOf(((Number) v).doubleValue()) : null;
     }
 
     private static boolean bool(JSONObject o, String key, boolean fallback) {

@@ -37,6 +37,9 @@ is ignored, and a file that doesn't parse is ignored as a whole, so a theme can 
 | `rows_below_dock` | 0 to 3 | Grid rows left visible under the dock; tiles shrink if the dock, its title and that many rows would not fit the screen height |
 | `dock_title` | bool | The focused dock app's name in large type above the dock (`true`); `false` keeps only the glow |
 | `dock_scale` | 40 to 100 | Size of the dock tiles as a percentage of the grid tiles, 100 by default. Smaller tiles are pulled together around the middle of the row, with the band shrinking to fit |
+| `weather_latitude`, `weather_longitude` | numbers | Turns on the weather strip under the clock for this place, see Weather. Without both keys the launcher never opens a network connection |
+| `weather_city` | string | Name shown above the temperature (up to 40 characters); empty for none |
+| `weather_days` | 1 to 7 | Days in the strip, 5 by default |
 | `wallpaper_schedule` | list | Pictures that replace the plain wallpaper at set days and times, see Scheduled wallpapers |
 | `dock_row` | bool | The dock as its own row with a band (`true`); `false` makes the dock apps the first tiles of one plain grid |
 | `reorder_button` | bool | A reorder button in the top bar (`false` by default); reordering is always in the Settings button's long-press menu |
@@ -66,6 +69,27 @@ is ignored, and a file that doesn't parse is ignored as a whole, so a theme can 
 under about 300 KB: the text, the hero name and the dock band are designed for black, and a 1 GB TV
 decodes the picture into memory on every Home start. Pictures larger than the screen are scaled down to
 it; a picture that is still over 4K (about 8.4 million pixels) after it is sampled down to the screen is not shown at all, and the plain colour stays.
+
+## Weather
+
+`weather_latitude` and `weather_longitude` add a weather strip under the clock: the temperature now, then a few days,
+each with an icon, the high and the low (Celsius).
+
+```json
+{ "weather_latitude": 49.0508, "weather_longitude": 2.1008, "weather_city": "Pontoise", "weather_days": 5 }
+```
+
+- This is the one feature that uses the network, so the launcher declares the `INTERNET` permission. It makes one
+  HTTPS request to `api.open-meteo.com` at most once an hour (five minutes between tries after a failure), on a
+  background thread, and sends nothing but the coordinates and the number of days. With no coordinates in the theme it
+  opens no connection at all.
+- The last good answer is kept on the TV, so the strip shows at start-up and while offline. An answer older than 12
+  hours is not shown, and the temperature now is hidden once it is more than 3 hours old (the days stay).
+- Weather data by [Open-Meteo.com](https://open-meteo.com/), licensed CC BY 4.0, free for personal use without
+  advertising or subscriptions; the credit is printed in small type under the temperature. Check their terms before a
+  commercial use.
+- Weekday names follow the TV's language. The strip is drawn in code (no pictures), is not animated and sits behind
+  the grid, so tiles scrolled up from the grid cover it.
 
 ## Scheduled wallpapers
 

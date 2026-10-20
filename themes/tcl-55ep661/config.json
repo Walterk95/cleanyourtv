@@ -20,5 +20,9 @@
     {"file": "wallpaper_nhl.jpg", "days": ["sat"], "from": "18:00", "to": "04:00"},
     {"file": "wallpaper_nfl.jpg", "days": ["sun"], "from": "18:00", "to": "04:00"},
     {"file": "wallpaper_psg.jpg", "days": ["tue", "wed"], "from": "18:00", "to": "04:00"}
-  ]
+  ],
+  "weather_latitude": 49.0508,
+  "weather_longitude": 2.1008,
+  "weather_city": "Pontoise",
+  "weather_days": 5
 }
