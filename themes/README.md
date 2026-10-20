@@ -86,9 +86,9 @@ each with an icon, the high and the low (Celsius).
 - The last good answer is kept on the TV, so the strip shows at start-up and while offline. An answer older than 12
   hours is not shown, and the temperature now is hidden once it is more than 3 hours old (the days stay).
 - Weather data by [Open-Meteo.com](https://open-meteo.com/), licensed CC BY 4.0, free for personal use without
-  advertising or subscriptions; the credit is printed in small type under the temperature. Check their terms before a
-  commercial use.
-- Weekday names follow the TV's language. The strip is drawn in code (no pictures), is not animated and sits behind
+  advertising or subscriptions; this theme does not print the credit on screen (the owner's choice), so it is
+  given here. Check their terms before a commercial use.
+- Weekday names follow the TV's language (short form, e.g. "lun."); temperatures read like "18°C". The strip is drawn in code (no pictures), is not animated and sits behind
   the grid, so tiles scrolled up from the grid cover it.
 
 ## Scheduled wallpapers
