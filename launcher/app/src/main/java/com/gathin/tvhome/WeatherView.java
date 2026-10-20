@@ -16,11 +16,12 @@ import java.util.Locale;
 /**
  * The weather strip: the temperature now, then a few days, each with a small icon drawn in code, the day's
  * high and its low. Static (drawn when the forecast changes, never animated), and no pictures are loaded, so it
- * costs a TV with 2 GB of RAM almost nothing. Weather data by Open-Meteo.com (CC BY 4.0), credited in small
- * type under the temperature.
+ * costs a TV with 2 GB of RAM almost nothing. Weather data by Open-Meteo.com (CC BY 4.0); the credit is in the
+ * README, not on screen, by the owner's choice.
  */
 public class WeatherView extends View {
-    private static final float LEFT_DP = 124f;
+    private static final float LEFT_DP = 132f;
+    private static final String UNIT = "\u00B0C";
     private static final float COLUMN_DP = 66f;
     private static final float HEIGHT_DP = 112f;
 
@@ -65,14 +66,13 @@ public class WeatherView extends View {
         highs.clear();
         lows.clear();
         // Built here, not in onDraw, so drawing allocates nothing.
-        cityText = this.city.toUpperCase(Locale.getDefault());
-        nowText = forecast != null ? forecast.nowTemp + "\u00B0" : "";
+        cityText = this.city;
+        nowText = forecast != null ? String.valueOf(forecast.nowTemp) : "";
         if (forecast != null) {
             for (WeatherForecast.Day d : forecast.days) {
-                labels.add(d.date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.getDefault())
-                        .replace(".", "").toUpperCase(Locale.getDefault()));
-                highs.add(d.max + "\u00B0");
-                lows.add(d.min + "\u00B0");
+                labels.add(d.date.getDayOfWeek().getDisplayName(TextStyle.SHORT, Locale.getDefault()));
+                highs.add(d.max + UNIT);
+                lows.add(d.min + UNIT);
             }
         }
         setVisibility(forecast == null ? GONE : VISIBLE);
@@ -103,15 +103,14 @@ public class WeatherView extends View {
         text.setLetterSpacing(0f);
         if (showNow) {
             text.setTypeface(light);
-            text.setTextSize(dp(46));
+            text.setTextSize(dp(42));
             text.setColor(0xFFFFFFFF);
             canvas.drawText(nowText, dp(2), dp(66), text);
-            drawIcon(canvas, WeatherForecast.kind(forecast.nowCode), dp(LEFT_DP - 34), dp(48), dp(34));
+            float numberEnd = dp(2) + text.measureText(nowText);
+            text.setTextSize(dp(20));
+            canvas.drawText(UNIT, numberEnd, dp(46), text);
+            drawIcon(canvas, WeatherForecast.kind(forecast.nowCode), dp(LEFT_DP - 26), dp(48), dp(34));
         }
-        text.setTypeface(regular);
-        text.setTextSize(dp(9));
-        text.setColor(0x59FFFFFF);
-        canvas.drawText("Open-Meteo.com", dp(4), dp(HEIGHT_DP - 6), text);
 
         // One column per day.
         text.setTextAlign(Paint.Align.CENTER);
