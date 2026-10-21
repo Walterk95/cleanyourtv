@@ -3,17 +3,18 @@
     "com.nst.iptvsmarterstvbox",
     "com.google.android.youtube.tv",
     "com.amazon.amazonvideo.livingroom",
-    "com.apple.atve.androidtv.appletv"
+    "com.apple.atve.androidtv.appletv",
+    "com.canal.android.canal"
   ],
   "fill_dock": false,
   "hidden_apps": ["com.tcl.tv"],
   "live_tv_package": "com.tcl.tv",
   "source_panel_service": "com.tcl.sourcemananger/com.tcl.insrc.ShowWindowService",
   "source_panel_action": "com.tcl.insrc.SHOW_WINDOW",
-  "columns": 4,
+  "columns": 5,
   "rows_below_dock": 0,
   "dock_title": false,
-  "dock_scale": 60,
+  "dock_scale": 75,
   "advanced_effects": true,
   "sky_intensity": 50,
   "wallpaper_schedule": [
