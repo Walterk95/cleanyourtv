@@ -14,14 +14,29 @@ android {
         versionName '2.4'
     }
 
+    // A fixed key, so a new build installs over the previous one. It comes from environment variables that the
+    // GitHub workflow fills from repository secrets; nothing secret is in this repository. Without them (a local
+    // build, or a build run for someone else's fork) the release is signed with the debug key as before.
+    def tvKeystore = System.getenv('TV_KEYSTORE_FILE')
+    if (tvKeystore) {
+        signingConfigs {
+            tvRelease {
+                storeFile file(tvKeystore)
+                storePassword System.getenv('TV_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('TV_KEY_ALIAS') ?: 'tv'
+                keyPassword System.getenv('TV_KEYSTORE_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
             // R8 strips and optimises the code (AndroidX included): smaller APK, faster start on a slow TV CPU.
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Sideloaded over ADB, never published: sign with the debug key so it installs over a debug build.
-            signingConfig signingConfigs.debug
+            // Sideloaded over ADB, never published: the fixed key when the workflow provides it, else the debug key.
+            signingConfig tvKeystore ? signingConfigs.tvRelease : signingConfigs.debug
         }
     }
 

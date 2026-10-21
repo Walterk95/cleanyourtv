@@ -27,6 +27,19 @@ jobs:
         with:
           packages: platforms;android-34 build-tools;34.0.0
       - uses: gradle/actions/setup-gradle@v4
+      - name: Signing key (from repository secrets, when they are set)
+        env:
+          TV_KEYSTORE_B64: ${{ secrets.TV_KEYSTORE_B64 }}
+          TV_KEYSTORE_PASSWORD: ${{ secrets.TV_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$TV_KEYSTORE_B64" ] && [ -n "$TV_KEYSTORE_PASSWORD" ]; then
+            printf '%s' "$TV_KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/tv.keystore"
+            echo "TV_KEYSTORE_FILE=$RUNNER_TEMP/tv.keystore" >> "$GITHUB_ENV"
+            echo "TV_KEYSTORE_PASSWORD=$TV_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+            echo "Signing with the fixed key."
+          else
+            echo "No signing secrets: signing with the debug key (each build then has a new signature)."
+          fi
       - name: Unit tests and release build
         working-directory: launcher
         run: |
