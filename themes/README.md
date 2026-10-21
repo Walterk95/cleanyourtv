@@ -37,6 +37,8 @@ is ignored, and a file that doesn't parse is ignored as a whole, so a theme can 
 | `rows_below_dock` | 0 to 3 | Grid rows left visible under the dock; tiles shrink if the dock, its title and that many rows would not fit the screen height |
 | `dock_title` | bool | The focused dock app's name in large type above the dock (`true`); `false` keeps only the glow |
 | `dock_scale` | 40 to 100 | Size of the dock tiles as a percentage of the grid tiles, 100 by default. Smaller tiles are pulled together around the middle of the row, with the band shrinking to fit |
+| `dock_tile_opacity` | 30 to 100 | How solid the dock tiles are while they do not have the focus, 100 (solid) by default; the focused tile is always solid |
+| `greeting_schedule` | list | Greeting texts by day and time, see Scheduled greetings |
 | `dock_opacity` | 0 to 100 | Opacity of the band behind the dock, 100 (solid) by default. Lower values let the wallpaper show through; the tiles stay solid |
 | `weather_latitude`, `weather_longitude` | numbers | Turns on the weather strip under the clock for this place, see Weather. Without both keys the launcher never opens a network connection |
 | `weather_city` | string | Name shown above the temperature (up to 40 characters); empty for none |
@@ -91,6 +93,25 @@ each with an icon, the high and the low (Celsius).
   given here. Check their terms before a commercial use.
 - Weekday names follow the TV's language (short form, e.g. "lun."); temperatures read like "18°C". The strip is drawn in code (no pictures), is not animated and sits behind
   the grid, so tiles scrolled up from the grid cover it.
+
+## Scheduled greetings
+
+`greeting_schedule` replaces the time-of-day greeting at set days and times. Each entry has a `text`, `days`
+(three-letter English names) and `from` / `to` ("HH:MM", same rules as the wallpaper schedule: equal times mean the
+whole day, a window past midnight belongs to the day it started). The first matching entry wins; when none matches
+the usual greeting (and `greeting_name`) is shown. Texts are cut at 60 characters and shown in capitals.
+
+```json
+"greeting_schedule": [
+  {"text": "Bonjour Alice", "days": ["sat"], "from": "06:00", "to": "12:00"},
+  {"text": "Bonjour Bob, bon appetit", "days": ["mon", "tue", "thu", "fri"], "from": "12:00", "to": "14:00"},
+  {"text": "Bonjour Carl", "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"], "from": "00:00", "to": "00:00"}
+]
+```
+
+To keep names out of a public repository, put the same `{"greeting_schedule": [...]}` object in a file called
+`greetings.json` in the theme folder. `tools/theme.sh` pushes it to the TV with the rest, git ignores it, and its
+entries are checked before the ones in `config.json`.
 
 ## Scheduled wallpapers
 

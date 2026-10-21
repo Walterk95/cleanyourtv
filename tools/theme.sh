@@ -30,7 +30,7 @@ tv() { "$PY" -I tv.py "$@"; }
 RESTART="a=\$(settings get secure enabled_accessibility_services); am force-stop $PKG; am start -n $PKG/.MainActivity >/dev/null; case \"\$a\" in *$PKG*) sleep 1; settings put secure enabled_accessibility_services ''; settings put secure enabled_accessibility_services \"\$a\"; settings put secure accessibility_enabled 1 ;; esac"
 
 if [ "${1:-}" = --reset ]; then
-  tv "mkdir -p $DIR; rm -f $DIR/config.json $DIR/wallpaper.jpg $DIR/wallpaper_*.jpg; printf '%s' '$REVISION' > $DIR/theme_revision; $RESTART; echo reset" | tail -n 1
+  tv "mkdir -p $DIR; rm -f $DIR/config.json $DIR/greetings.json $DIR/wallpaper.jpg $DIR/wallpaper_*.jpg; printf '%s' '$REVISION' > $DIR/theme_revision; $RESTART; echo reset" | tail -n 1
   exit 0
 fi
 THEME="${THEME_ARG:?usage: theme.sh <theme folder> | --reset}"
@@ -52,6 +52,15 @@ for f in "$THEME"/wallpaper_*.jpg; do
   [ -f "$f" ] || continue
   "$PY" -I b64push.py "$f" "$DIR/$(basename "$f")"
 done
+# Greetings with names in them (greetings.json) stay out of a public repository: the file sits in the theme
+# folder on your computer and goes to the TV from here, like the pictures.
+if [ -f "$THEME/greetings.json" ]; then
+  "$PY" -I -c 'import json,sys; json.load(open(sys.argv[1], encoding="utf-8-sig"))' "$THEME/greetings.json" 2>/dev/null \
+    || { echo "$THEME/greetings.json is not valid JSON" >&2; exit 1; }
+  tv --push "$THEME/greetings.json" "$DIR/greetings.json"
+else
+  tv "rm -f $DIR/greetings.json" >/dev/null
+fi
 tv "printf '%s' '$REVISION' > $DIR/theme_revision" >/dev/null
 tv "$RESTART; echo applied" | tail -n 1
 echo "Theme $(basename "$THEME") is on the TV. Undo with: tools/theme.sh --reset"

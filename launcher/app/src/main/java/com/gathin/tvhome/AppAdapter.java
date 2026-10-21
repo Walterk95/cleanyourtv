@@ -167,6 +167,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final boolean dockTitle;
     /** Dock tiles as a percentage of the grid tiles (theme key dock_scale); 100 keeps the dock as big as the grid. */
     private final int dockScale;
+    /** dock_tile_opacity as 0 to 1: the dock tiles without the focus are drawn this solid. */
+    private final float dockTileAlpha;
     /** The owner's saved order (reorder button, Order): key -> rank. Empty when there is none or it no longer applies. */
     private Map<String, Integer> savedRanks = Collections.emptyMap();
     /** Reorder mode: no empty dock slots, so every position holds a tile that can move. */
@@ -209,6 +211,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.dockTitle = cfg.dockTitle;
         this.dockRow = cfg.dockRow;
         this.dockScale = cfg.dockScale;
+        this.dockTileAlpha = cfg.dockTileOpacity / 100f;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
@@ -405,6 +408,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.name.setText(e.name);
         h.name.setVisibility(dockRow && position < dockSize ? View.INVISIBLE : View.VISIBLE);   // the dock has no labels
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
+        h.restAlpha = dockRow && position < dockSize ? dockTileAlpha : 1f;
+        h.card.setAlpha(focused ? 1f : h.restAlpha);
         h.name.setAlpha(focused ? 1f : 0f);
         h.card.setScaleX(focused && animations ? focusScale() : 1f);
         h.card.setScaleY(focused && animations ? focusScale() : 1f);
@@ -623,6 +628,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int baseW, baseH;
         /** Width of one grid cell (px), to spread the shrunk dock tiles around the middle. */
         int cellW;
+        /** How solid the tile is without the focus: dock_tile_opacity for a dock tile, 1 for a grid tile. */
+        float restAlpha = 1f;
 
         Holder(View v, TileListener listener, boolean animations, boolean advancedEffects,
                boolean reducedMotion) {
@@ -655,6 +662,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             });
 
             card.setOnFocusChangeListener((view, focused) -> {
+                view.setAlpha(focused ? 1f : restAlpha);
                 view.animate().cancel();
                 banner.animate().cancel();
                 name.animate().cancel();

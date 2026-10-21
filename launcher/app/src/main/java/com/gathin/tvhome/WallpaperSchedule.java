@@ -44,12 +44,8 @@ final class WallpaperSchedule {
     static Rule rule(String file, List<String> days, String from, String to) {
         if (file == null || !FILE.matcher(file).matches() || file.contains("..")) return null;
         if (days == null || days.isEmpty()) return null;
-        int mask = 0;
-        for (String d : days) {
-            int bit = dayBit(d);
-            if (bit < 0) return null;
-            mask |= 1 << bit;
-        }
+        int mask = dayMask(days);
+        if (mask < 0) return null;
         int f = minutes(from);
         int t = minutes(to);
         if (f < 0 || t < 0) return null;
@@ -71,15 +67,32 @@ final class WallpaperSchedule {
     }
 
     static boolean matches(Rule r, int isoDay, int minute) {
+        return matches(r.days, r.fromMinute, r.toMinute, isoDay, minute);
+    }
+
+    /** The window logic on its own, shared with {@link GreetingSchedule}. */
+    static boolean matches(int days, int fromMinute, int toMinute, int isoDay, int minute) {
         int today = 1 << (isoDay - 1);
         int yesterday = 1 << ((isoDay + 5) % 7);
-        if (r.fromMinute == r.toMinute) return (r.days & today) != 0;          // the whole day
-        if (r.fromMinute < r.toMinute) {                                        // same-day window
-            return (r.days & today) != 0 && minute >= r.fromMinute && minute < r.toMinute;
+        if (fromMinute == toMinute) return (days & today) != 0;                 // the whole day
+        if (fromMinute < toMinute) {                                            // same-day window
+            return (days & today) != 0 && minute >= fromMinute && minute < toMinute;
         }
         // Over midnight: the evening part is today's, the small hours belong to yesterday's window.
-        if ((r.days & today) != 0 && minute >= r.fromMinute) return true;
-        return (r.days & yesterday) != 0 && minute < r.toMinute;
+        if ((days & today) != 0 && minute >= fromMinute) return true;
+        return (days & yesterday) != 0 && minute < toMinute;
+    }
+
+    /** Bit mask of three-letter day names (bit 0 = Monday); -1 when the list is empty or has a bad name. */
+    static int dayMask(List<String> days) {
+        if (days == null || days.isEmpty()) return -1;
+        int mask = 0;
+        for (String d : days) {
+            int bit = dayBit(d);
+            if (bit < 0) return -1;
+            mask |= 1 << bit;
+        }
+        return mask;
     }
 
     private static int dayBit(String name) {
@@ -92,7 +105,7 @@ final class WallpaperSchedule {
         return -1;
     }
 
-    private static int minutes(String hhmm) {
+    static int minutes(String hhmm) {
         if (hhmm == null) return -1;
         java.util.regex.Matcher m = TIME.matcher(hhmm.trim());
         if (!m.matches()) return -1;

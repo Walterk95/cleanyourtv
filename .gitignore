@@ -17,3 +17,5 @@ launcher/replay_pid*.log
 
 # Sports wallpapers for a personal theme stay on your computer and on the TV, not in the repository.
 themes/*/wallpaper_*.jpg
+# Greetings with family names in them: same, on your computer and on the TV only.
+themes/*/greetings.json

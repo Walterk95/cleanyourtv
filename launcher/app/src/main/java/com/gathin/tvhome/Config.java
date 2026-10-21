@@ -30,6 +30,8 @@ import java.util.List;
 final class Config {
     private static final String TAG = "TvHome.Config";
     static final String FILE_NAME = "config.json";
+    /** Optional second theme file with the same "greeting_schedule" list, for names that stay out of a public repository. */
+    static final String GREETINGS_NAME = "greetings.json";
     static final String WALLPAPER_NAME = "wallpaper.jpg";
     static final String SETTINGS_NAME = "launcher_settings";
     private static final String THEME_REVISION_NAME = "theme_revision";
@@ -84,6 +86,10 @@ final class Config {
     final int dockScale;
     /** Opacity of the dock band, 0 (clear) to 100 (solid, the default). Only the band; the tiles stay solid. */
     final int dockOpacity;
+    /** Opacity of the dock tiles that do not have the focus, 30 to 100 (default 100); the focused tile stays solid. */
+    final int dockTileOpacity;
+    /** Greeting texts by day and time (greeting_schedule); the first match replaces the time-of-day greeting. */
+    final List<GreetingSchedule.Rule> greetingSchedule;
     /** Folder the theme tools push into (also holds the scheduled wallpapers); null when external storage is unavailable. */
     final File themeDir;
     /** Wallpaper rules (theme key wallpaper_schedule); empty when the theme has none. */
@@ -97,11 +103,14 @@ final class Config {
                    boolean shamsiDate, String greetingName, boolean moduleCards, boolean reducedMotion, boolean dockTitle, boolean dockRow, boolean reorderButton, String vpnApp,
                    boolean showHomeSettingsShortcut, boolean showStats, boolean appLibrary, int backgroundColor, int skyIntensity,
                    int[] settingsKeycodes, boolean settingsKeyPanel, File wallpaper, boolean overlayApplied,
-                   Festival festival, int dockScale, int dockOpacity, File themeDir, List<WallpaperSchedule.Rule> wallpaperSchedule,
+                   Festival festival, int dockScale, int dockOpacity, int dockTileOpacity,
+                   List<GreetingSchedule.Rule> greetingSchedule, File themeDir, List<WallpaperSchedule.Rule> wallpaperSchedule,
                    WeatherConfig weather) {
         this.weather = weather;
         this.dockScale = dockScale;
         this.dockOpacity = dockOpacity;
+        this.dockTileOpacity = dockTileOpacity;
+        this.greetingSchedule = Collections.unmodifiableList(greetingSchedule);
         this.themeDir = themeDir;
         this.wallpaperSchedule = Collections.unmodifiableList(wallpaperSchedule);
         this.dockApps = Collections.unmodifiableList(dockApps);
@@ -173,6 +182,8 @@ final class Config {
         boolean applied = false;
         int dockScale = 100;
         int dockOpacity = 100;
+        int dockTileOpacity = 100;
+        List<GreetingSchedule.Rule> greetings = new ArrayList<>();
         List<WallpaperSchedule.Rule> schedule = new ArrayList<>();
         WeatherConfig weather = null;
 
@@ -210,6 +221,7 @@ final class Config {
             settingsKeyPanel = bool(json, "settings_key_panel", settingsKeyPanel);
             dockScale = integer(json, "dock_scale", dockScale, 40, 100);
             dockOpacity = integer(json, "dock_opacity", dockOpacity, 0, 100);
+            dockTileOpacity = integer(json, "dock_tile_opacity", dockTileOpacity, 30, 100);
             schedule = scheduleList(json, "wallpaper_schedule");
             weather = WeatherConfig.of(number(json, "weather_latitude"), number(json, "weather_longitude"),
                     string(json, "weather_city", ""), json.opt("weather_days") instanceof Number
@@ -223,6 +235,11 @@ final class Config {
         if (chosenColumns >= 4 && chosenColumns <= 7) columns = chosenColumns;
         animations = choices.getBoolean("animations", animations);
         advancedEffects = choices.getBoolean("advanced_effects", advancedEffects);
+        // Greetings: the private file first (it holds the names), then the ones in config.json; at most 16 in all.
+        JSONObject privateGreetings = dir != null ? read(new File(dir, GREETINGS_NAME)) : null;
+        if (privateGreetings != null) greetings.addAll(greetingList(privateGreetings, "greeting_schedule"));
+        if (json != null) greetings.addAll(greetingList(json, "greeting_schedule"));
+        if (greetings.size() > 16) greetings = new ArrayList<>(greetings.subList(0, 16));
         File wallpaper = dir != null ? new File(dir, WALLPAPER_NAME) : null;
         if (wallpaper != null && !(wallpaper.isFile() && wallpaper.length() > 0)) wallpaper = null;
         // A theme can also switch the wallpaper off while the file is still there.
@@ -235,7 +252,7 @@ final class Config {
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, greetingName, moduleCards, reducedMotion, dockTitle, dockRow, reorderButton, vpn, homeSettings, showStats, library, background,
                 Math.max(0, Math.min(100, skyIntensity)), settingsKeycodes, settingsKeyPanel, wallpaper, applied,
-                festival, dockScale, dockOpacity, dir, schedule, weather);
+                festival, dockScale, dockOpacity, dockTileOpacity, greetings, dir, schedule, weather);
     }
 
     /**
@@ -252,6 +269,26 @@ final class Config {
             if (!(item instanceof JSONObject)) continue;
             JSONObject r = (JSONObject) item;
             WallpaperSchedule.Rule rule = WallpaperSchedule.rule(string(r, "file", null),
+                    stringList(r, "days", null), string(r, "from", null), string(r, "to", null));
+            if (rule != null) out.add(rule);
+        }
+        return out;
+    }
+
+    /**
+     * "greeting_schedule": a list of {"text": "Bonjour ...", "days": ["sat"], "from": "06:00", "to": "12:00"}.
+     * An entry that is malformed is skipped on its own; at most 16 are read.
+     */
+    private static List<GreetingSchedule.Rule> greetingList(JSONObject o, String key) {
+        List<GreetingSchedule.Rule> out = new ArrayList<>();
+        Object v = o.opt(key);
+        if (!(v instanceof JSONArray)) return out;
+        JSONArray a = (JSONArray) v;
+        for (int i = 0; i < a.length() && out.size() < 16; i++) {
+            Object item = a.opt(i);
+            if (!(item instanceof JSONObject)) continue;
+            JSONObject r = (JSONObject) item;
+            GreetingSchedule.Rule rule = GreetingSchedule.rule(string(r, "text", null),
                     stringList(r, "days", null), string(r, "from", null), string(r, "to", null));
             if (rule != null) out.add(rule);
         }

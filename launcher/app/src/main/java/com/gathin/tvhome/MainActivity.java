@@ -128,6 +128,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private File defaultWallpaper;
     private File wallDir;
     private List<WallpaperSchedule.Rule> wallSchedule = Collections.emptyList();
+    /** greeting_schedule: texts by day and time that replace the time-of-day greeting. */
+    private List<GreetingSchedule.Rule> greetSchedule = Collections.emptyList();
     /** Weather strip (theme keys weather_latitude and weather_longitude): null config means off and no network. */
     private WeatherView weatherView;
     private WeatherConfig weatherCfg;
@@ -285,6 +287,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         defaultWallpaper = cfg.wallpaper;
         wallDir = cfg.themeDir;
         wallSchedule = cfg.wallpaperSchedule;
+        greetSchedule = cfg.greetingSchedule;
         updateWallpaper();
         weatherView = findViewById(R.id.weather);
         weatherCfg = cfg.weather;
@@ -1596,7 +1599,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             greeting.setText(festiveGreeting);
             greeting.setTextColor(liftTowardsWhite(festival.accentColor(), 0.25f));
         } else {
-            greeting.setText(greetingName.isEmpty() ? getString(res)
+            String scheduled = null;
+            if (!greetSchedule.isEmpty()) {
+                LocalDateTime now = LocalDateTime.now();
+                scheduled = GreetingSchedule.pick(greetSchedule, now.getDayOfWeek().getValue(),
+                        now.getHour() * 60 + now.getMinute());
+            }
+            greeting.setText(scheduled != null ? scheduled
+                    : greetingName.isEmpty() ? getString(res)
                     : getString(R.string.greeting_with_name, getString(res), greetingName));
             greeting.setTextColor(greetingColor);
         }
