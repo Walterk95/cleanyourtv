@@ -7,7 +7,7 @@
     "com.canal.android.canal"
   ],
   "fill_dock": false,
-  "hidden_apps": ["com.tcl.tv"],
+  "hidden_apps": ["com.tcl.tv", "com.tcl.notereminder", "com.tcl.smartalexa", "tv.wuaki.apptv"],
   "live_tv_package": "com.tcl.tv",
   "source_panel_service": "com.tcl.sourcemananger/com.tcl.insrc.ShowWindowService",
   "source_panel_action": "com.tcl.insrc.SHOW_WINDOW",
