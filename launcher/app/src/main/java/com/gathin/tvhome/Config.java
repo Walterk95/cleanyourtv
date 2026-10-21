@@ -82,6 +82,8 @@ final class Config {
     final Festival festival;
     /** Size of the dock tiles as a percentage of the grid tiles (theme key dock_scale, 40 to 100); 100 keeps them equal. */
     final int dockScale;
+    /** Opacity of the dock band, 0 (clear) to 100 (solid, the default). Only the band; the tiles stay solid. */
+    final int dockOpacity;
     /** Folder the theme tools push into (also holds the scheduled wallpapers); null when external storage is unavailable. */
     final File themeDir;
     /** Wallpaper rules (theme key wallpaper_schedule); empty when the theme has none. */
@@ -95,10 +97,11 @@ final class Config {
                    boolean shamsiDate, String greetingName, boolean moduleCards, boolean reducedMotion, boolean dockTitle, boolean dockRow, boolean reorderButton, String vpnApp,
                    boolean showHomeSettingsShortcut, boolean showStats, boolean appLibrary, int backgroundColor, int skyIntensity,
                    int[] settingsKeycodes, boolean settingsKeyPanel, File wallpaper, boolean overlayApplied,
-                   Festival festival, int dockScale, File themeDir, List<WallpaperSchedule.Rule> wallpaperSchedule,
+                   Festival festival, int dockScale, int dockOpacity, File themeDir, List<WallpaperSchedule.Rule> wallpaperSchedule,
                    WeatherConfig weather) {
         this.weather = weather;
         this.dockScale = dockScale;
+        this.dockOpacity = dockOpacity;
         this.themeDir = themeDir;
         this.wallpaperSchedule = Collections.unmodifiableList(wallpaperSchedule);
         this.dockApps = Collections.unmodifiableList(dockApps);
@@ -169,6 +172,7 @@ final class Config {
         boolean settingsKeyPanel = res.getBoolean(R.bool.settings_key_panel);
         boolean applied = false;
         int dockScale = 100;
+        int dockOpacity = 100;
         List<WallpaperSchedule.Rule> schedule = new ArrayList<>();
         WeatherConfig weather = null;
 
@@ -205,6 +209,7 @@ final class Config {
             settingsKeycodes = intArray(json, "settings_key_keycodes", settingsKeycodes);
             settingsKeyPanel = bool(json, "settings_key_panel", settingsKeyPanel);
             dockScale = integer(json, "dock_scale", dockScale, 40, 100);
+            dockOpacity = integer(json, "dock_opacity", dockOpacity, 0, 100);
             schedule = scheduleList(json, "wallpaper_schedule");
             weather = WeatherConfig.of(number(json, "weather_latitude"), number(json, "weather_longitude"),
                     string(json, "weather_city", ""), json.opt("weather_days") instanceof Number
@@ -230,7 +235,7 @@ final class Config {
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, greetingName, moduleCards, reducedMotion, dockTitle, dockRow, reorderButton, vpn, homeSettings, showStats, library, background,
                 Math.max(0, Math.min(100, skyIntensity)), settingsKeycodes, settingsKeyPanel, wallpaper, applied,
-                festival, dockScale, dir, schedule, weather);
+                festival, dockScale, dockOpacity, dir, schedule, weather);
     }
 
     /**

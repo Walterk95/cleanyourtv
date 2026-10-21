@@ -15,6 +15,7 @@
   "rows_below_dock": 0,
   "dock_title": false,
   "dock_scale": 75,
+  "dock_opacity": 45,
   "advanced_effects": true,
   "sky_intensity": 50,
   "wallpaper_schedule": [
