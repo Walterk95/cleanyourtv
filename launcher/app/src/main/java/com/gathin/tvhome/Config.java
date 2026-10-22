@@ -88,6 +88,10 @@ final class Config {
     final int dockOpacity;
     /** Opacity of the dock tiles that do not have the focus, 30 to 100 (default 100); the focused tile stays solid. */
     final int dockTileOpacity;
+    /** Size of the grid tiles below the dock as a percentage of the full tile, 50 to 100 (default 100); centred in their cell. */
+    final int gridScale;
+    /** Opacity of the grid tiles that do not have the focus, 30 to 100 (default 100). */
+    final int gridTileOpacity;
     /** Greeting texts by day and time (greeting_schedule); the first match replaces the time-of-day greeting. */
     final List<GreetingSchedule.Rule> greetingSchedule;
     /** Folder the theme tools push into (also holds the scheduled wallpapers); null when external storage is unavailable. */
@@ -103,13 +107,15 @@ final class Config {
                    boolean shamsiDate, String greetingName, boolean moduleCards, boolean reducedMotion, boolean dockTitle, boolean dockRow, boolean reorderButton, String vpnApp,
                    boolean showHomeSettingsShortcut, boolean showStats, boolean appLibrary, int backgroundColor, int skyIntensity,
                    int[] settingsKeycodes, boolean settingsKeyPanel, File wallpaper, boolean overlayApplied,
-                   Festival festival, int dockScale, int dockOpacity, int dockTileOpacity,
+                   Festival festival, int dockScale, int dockOpacity, int dockTileOpacity, int gridScale, int gridTileOpacity,
                    List<GreetingSchedule.Rule> greetingSchedule, File themeDir, List<WallpaperSchedule.Rule> wallpaperSchedule,
                    WeatherConfig weather) {
         this.weather = weather;
         this.dockScale = dockScale;
         this.dockOpacity = dockOpacity;
         this.dockTileOpacity = dockTileOpacity;
+        this.gridScale = gridScale;
+        this.gridTileOpacity = gridTileOpacity;
         this.greetingSchedule = Collections.unmodifiableList(greetingSchedule);
         this.themeDir = themeDir;
         this.wallpaperSchedule = Collections.unmodifiableList(wallpaperSchedule);
@@ -183,6 +189,8 @@ final class Config {
         int dockScale = 100;
         int dockOpacity = 100;
         int dockTileOpacity = 100;
+        int gridScale = 100;
+        int gridTileOpacity = 100;
         List<GreetingSchedule.Rule> greetings = new ArrayList<>();
         List<WallpaperSchedule.Rule> schedule = new ArrayList<>();
         WeatherConfig weather = null;
@@ -222,6 +230,8 @@ final class Config {
             dockScale = integer(json, "dock_scale", dockScale, 40, 100);
             dockOpacity = integer(json, "dock_opacity", dockOpacity, 0, 100);
             dockTileOpacity = integer(json, "dock_tile_opacity", dockTileOpacity, 30, 100);
+            gridScale = integer(json, "grid_scale", gridScale, 50, 100);
+            gridTileOpacity = integer(json, "grid_tile_opacity", gridTileOpacity, 30, 100);
             schedule = scheduleList(json, "wallpaper_schedule");
             weather = WeatherConfig.of(number(json, "weather_latitude"), number(json, "weather_longitude"),
                     string(json, "weather_city", ""), json.opt("weather_days") instanceof Number
@@ -252,7 +262,7 @@ final class Config {
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, greetingName, moduleCards, reducedMotion, dockTitle, dockRow, reorderButton, vpn, homeSettings, showStats, library, background,
                 Math.max(0, Math.min(100, skyIntensity)), settingsKeycodes, settingsKeyPanel, wallpaper, applied,
-                festival, dockScale, dockOpacity, dockTileOpacity, greetings, dir, schedule, weather);
+                festival, dockScale, dockOpacity, dockTileOpacity, gridScale, gridTileOpacity, greetings, dir, schedule, weather);
     }
 
     /**

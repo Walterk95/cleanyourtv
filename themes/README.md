@@ -38,6 +38,8 @@ is ignored, and a file that doesn't parse is ignored as a whole, so a theme can 
 | `dock_title` | bool | The focused dock app's name in large type above the dock (`true`); `false` keeps only the glow |
 | `dock_scale` | 40 to 100 | Size of the dock tiles as a percentage of the grid tiles, 100 by default. Smaller tiles are pulled together around the middle of the row, with the band shrinking to fit |
 | `dock_tile_opacity` | 30 to 100 | How solid the dock tiles are while they do not have the focus, 100 (solid) by default; the focused tile is always solid |
+| `grid_scale` | 50 to 100 | Size of the tiles below the dock as a percentage of the full tile, 100 by default; they stay centred in their cell, so the gaps grow |
+| `grid_tile_opacity` | 30 to 100 | How solid the tiles below the dock are while they do not have the focus, 100 by default |
 | `greeting_schedule` | list | Greeting texts by day and time, see Scheduled greetings |
 | `dock_opacity` | 0 to 100 | Opacity of the band behind the dock, 100 (solid) by default. Lower values let the wallpaper show through; the tiles stay solid |
 | `weather_latitude`, `weather_longitude` | numbers | Turns on the weather strip under the clock for this place, see Weather. Without both keys the launcher never opens a network connection |

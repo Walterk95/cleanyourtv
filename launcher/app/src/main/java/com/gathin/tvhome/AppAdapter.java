@@ -169,6 +169,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private final int dockScale;
     /** dock_tile_opacity as 0 to 1: the dock tiles without the focus are drawn this solid. */
     private final float dockTileAlpha;
+    /** grid_scale (percent of the full tile) and grid_tile_opacity (0 to 1) for the tiles below the dock. */
+    private final int gridScale;
+    private final float gridTileAlpha;
     /** The owner's saved order (reorder button, Order): key -> rank. Empty when there is none or it no longer applies. */
     private Map<String, Integer> savedRanks = Collections.emptyMap();
     /** Reorder mode: no empty dock slots, so every position holds a tile that can move. */
@@ -212,6 +215,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.dockRow = cfg.dockRow;
         this.dockScale = cfg.dockScale;
         this.dockTileAlpha = cfg.dockTileOpacity / 100f;
+        this.gridScale = cfg.gridScale;
+        this.gridTileAlpha = cfg.gridTileOpacity / 100f;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
         setHasStableIds(true);
@@ -365,12 +370,19 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private void applyTileSize(Holder h, int position) {
         int w = h.baseW, ht = h.baseH;
         float shift = 0f;
-        if (dockRow && position < dockSize && dockScale < 100 && h.baseW > 0) {
-            float density = ctx.getResources().getDisplayMetrics().density;
-            w = Math.round(h.baseW * dockScale / 100f);
+        boolean inDock = dockRow && position < dockSize;
+        if (inDock) {
+            if (dockScale < 100 && h.baseW > 0) {
+                float density = ctx.getResources().getDisplayMetrics().density;
+                w = Math.round(h.baseW * dockScale / 100f);
+                ht = tileHeightPx(w);
+                float gap = Math.max(12f * density, 0.15f * w);
+                shift = (position - (dockSize - 1) / 2f) * (w + gap - h.cellW);
+            }
+        } else if (gridScale < 100 && h.baseW > 0) {
+            // Grid tiles stay centred in their cell, so no shift: they are just drawn smaller.
+            w = Math.round(h.baseW * gridScale / 100f);
             ht = tileHeightPx(w);
-            float gap = Math.max(12f * density, 0.15f * w);
-            shift = (position - (dockSize - 1) / 2f) * (w + gap - h.cellW);
         }
         if (w <= 0) return;
         ViewGroup.LayoutParams lp = h.card.getLayoutParams();
@@ -408,7 +420,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         h.name.setText(e.name);
         h.name.setVisibility(dockRow && position < dockSize ? View.INVISIBLE : View.VISIBLE);   // the dock has no labels
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
-        h.restAlpha = dockRow && position < dockSize ? dockTileAlpha : 1f;
+        h.restAlpha = dockRow && position < dockSize ? dockTileAlpha : gridTileAlpha;
         h.card.setAlpha(focused ? 1f : h.restAlpha);
         h.name.setAlpha(focused ? 1f : 0f);
         h.card.setScaleX(focused && animations ? focusScale() : 1f);
@@ -628,7 +640,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         int baseW, baseH;
         /** Width of one grid cell (px), to spread the shrunk dock tiles around the middle. */
         int cellW;
-        /** How solid the tile is without the focus: dock_tile_opacity for a dock tile, 1 for a grid tile. */
+        /** How solid the tile is without the focus: dock_tile_opacity for a dock tile, grid_tile_opacity for a grid tile. */
         float restAlpha = 1f;
 
         Holder(View v, TileListener listener, boolean animations, boolean advancedEffects,
